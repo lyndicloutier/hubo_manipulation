@@ -8,11 +8,10 @@ PACKAGE_NAME = 'my_moveit_pkg'
 
 setup(
     name=PACKAGE_NAME,
-    version='0.0.0',
+    version='2.35.0',
     packages=[PACKAGE_NAME],
     data_files=[
-        ('share/ament_index/resource_index/packages',
-            ['resource/' + PACKAGE_NAME]),
+        ('share/ament_index/resource_index/packages', ['resource/' + PACKAGE_NAME]),
         ('share/' + PACKAGE_NAME, ['package.xml']),
         (os.path.join('share', PACKAGE_NAME, 'launch'), glob('launch/*.launch.py')),
         (os.path.join('share', PACKAGE_NAME, 'config'), glob('config/*.yaml')),
@@ -26,7 +25,7 @@ setup(
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [
-            "ur5_arm_test_2 = my_moveit_pkg.ur5_arm_test_2:main"
+            "new_arm_test = my_moveit_pkg.new_arm_test:main"
         ],
     },
 )
