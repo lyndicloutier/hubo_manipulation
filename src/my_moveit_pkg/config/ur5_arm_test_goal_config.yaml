@@ -31,7 +31,7 @@
 #       wrist_2_joint: [-0.1,0.1]
 #       wrist_3_joint: [-0.1,0.1]
 
-new_arm_test:
+ur5_arm_test:
     ros__parameters:
 
       controller_name: "joint_trajectory_controller"

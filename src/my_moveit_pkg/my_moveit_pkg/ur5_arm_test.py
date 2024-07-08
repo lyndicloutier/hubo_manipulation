@@ -15,31 +15,31 @@
 # Authors: Denis Štogl, Lovro Ivanov
 #
 
-# pylint: disable=missing-function-docstring, missing-class-docstring, missing-module-docstring, line-too-long
+# pylint: disable=missing-function-docstring, missing-class-docstring, missing-module-docstring, line-too-long, trailing-whitespace
 
 import rclpy
 from rclpy.node import Node
 from builtin_interfaces.msg import Duration
 from rcl_interfaces.msg import ParameterDescriptor
-
 from trajectory_msgs.msg import JointTrajectory, JointTrajectoryPoint
 from sensor_msgs.msg import JointState
 
-
-class PublisherJointTrajectory(Node):
+class UR5ArmTest(Node):
     def __init__(self):
         super().__init__("ur5_arm_test")
-        # Declare all parameters
-        # declares the name of the controller
-        self.declare_parameter("controller_name", "joint_trajectory_controller")
-        # publishes every 6 seconds
-        self.declare_parameter("wait_sec_between_publish", 6)
-        # sets the goal positions
-        self.declare_parameter("goal_names", ["pos1", "pos2"])
-        self.declare_parameter("joints", [""])
-        # self.declare_parameter("joints", ["shoulder_pan_joint", "shoulder_lift_joint", "elbow_joint", "wrist_1_joint", "wrist_2_joint", "wrist_3_joint"])
-        self.declare_parameter("check_starting_point", False)
-        # self.declare_parameter("check_starting_point", True)
+
+        self._allow_undeclared_parameters = True
+
+        # prints .yaml file to screen
+        self.get_logger().info(f'"{self._parameters} {self._parameter_overrides}"')
+
+        self.declare_parameters(namespace = "", 
+                                parameters = [("controller_name", rclpy.Parameter.Type.STRING),
+                                                ("wait_sec_between_publish", rclpy.Parameter.Type.INTEGER), 
+                                                ("goal_names", rclpy.Parameter.Type.STRING_ARRAY), 
+                                                ("joints", rclpy.Parameter.Type.STRING_ARRAY), 
+                                                ("check_starting_point", rclpy.Parameter.Type.BOOL)])
+
 
         # Read parameters
         controller_name = self.get_parameter("controller_name").value
@@ -51,7 +51,6 @@ class PublisherJointTrajectory(Node):
 
         # if joints is empty
         if self.joints is None or len(self.joints) == 0:
-            # raise Exception('"joints" parameter is not set!')
             raise ValueError('"joints" parameter is not set!')
 
         # starting point stuff
@@ -64,11 +63,9 @@ class PublisherJointTrajectory(Node):
 
             for name in self.joints:
                 if len(self.starting_point[name]) != 2:
-                    # raise Exception('"starting_point" parameter is not set correctly!')
                     raise ValueError('"starting_point" parameter is not set correctly!')
-            self.joint_state_sub = self.create_subscription(
-                JointState, "joint_states", self.joint_state_callback, 10
-            )
+            self.joint_state_sub = self.create_subscription(JointState, "joint_states", self.joint_state_callback, 10)
+
         # initialize starting point status
         self.starting_point_ok = not self.check_starting_point
 
@@ -92,7 +89,6 @@ class PublisherJointTrajectory(Node):
                 )
 
                 if goal is None or len(goal) == 0:
-                    # raise Exception(f'Values for goal "{goal_name}" not set!')
                     raise ValueError(f'Values for goal "{goal_name}" not set!')
 
                 float_goal = [float(value) for value in goal]
@@ -120,36 +116,31 @@ class PublisherJointTrajectory(Node):
 
                     return [True, float_values]
                 
-                # checking for position, velocity, acceleration, and effort values
+                # CHECKING FOR POSITION, VELOCITY, ACCELERATION, AND EFFORT VALUES
 
                 one_ok = False
 
                 [ok, values] = get_sub_param("positions", goal_name)
                 if ok:
-                    self.get_logger().info("test\n")
                     point.positions = values
                     one_ok = True
 
                 [ok, values] = get_sub_param("velocities", goal_name)
                 if ok:
-                    self.get_logger().info("test1\n")
                     point.velocities = values
                     one_ok = True
 
                 [ok, values] = get_sub_param("accelerations", goal_name)
                 if ok:
-                    self.get_logger().info("test2\n")
                     point.accelerations = values
                     one_ok = True
 
                 [ok, values] = get_sub_param("effort", goal_name)
                 if ok:
-                    self.get_logger().info("test3\n")
                     point.effort = values
                     one_ok = True
 
                 if one_ok:
-                    self.get_logger().info("test4\n")
                     point.time_from_start = Duration(sec=4)
                     self.goals.append(point)
                     self.get_logger().info(f'Goal "{goal_name}" has definition {point}')
@@ -164,7 +155,7 @@ class PublisherJointTrajectory(Node):
                         "effort: [eff_joint1, eff_joint2, ...]"
                     )
 
-                # end check for values
+                # END CHECK FOR VALUES
 
         if len(self.goals) < 1:
             self.get_logger().error("No valid goal found. Exiting...")
@@ -173,11 +164,13 @@ class PublisherJointTrajectory(Node):
         publish_topic = "/" + controller_name + "/" + "joint_trajectory"
 
         self.get_logger().info(
-            f"Publishing {len(goal_names)} goals on topic '{publish_topic}' every "
+            f"Publishing goal on topic '{publish_topic}' every "
             f"{wait_sec_between_publish} s"
         )
 
         self.publisher_ = self.create_publisher(JointTrajectory, publish_topic, 1)
+
+
         self.timer = self.create_timer(wait_sec_between_publish, self.timer_callback)
         self.i = 0
 
@@ -228,10 +221,12 @@ class PublisherJointTrajectory(Node):
 def main(args=None):
     rclpy.init(args=args)
 
-    publisher_joint_trajectory = PublisherJointTrajectory()
+    ur5_arm = UR5ArmTest()
 
-    rclpy.spin(publisher_joint_trajectory)
-    publisher_joint_trajectory.destroy_node()
+    rclpy.spin(ur5_arm)
+
+    ur5_arm.destroy_node()
+
     rclpy.shutdown()
 
 

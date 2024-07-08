@@ -25,7 +25,7 @@ setup(
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [
-            "new_arm_test = my_moveit_pkg.new_arm_test:main"
+            "ur5_arm_test = my_moveit_pkg.ur5_arm_test:main"
         ],
     },
 )
